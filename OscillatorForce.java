@@ -24,4 +24,12 @@ public class OscillatorForce {
     public Particle getParticle() {
         return particle;
     }
+
+    public double getK() {
+        return K;
+    }
+
+    public double getG() {
+        return G;
+    }
 }
