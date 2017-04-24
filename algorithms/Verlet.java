@@ -1,8 +1,13 @@
-import com.sun.tools.javac.util.Pair;
+package algorithms;
+
+import forces.Force;
+import forces.OscillatorForce;
+import models.Particle;
+import models.ParticleState;
 
 public class Verlet {
 
-    private OscillatorForce f;
+    private Force f;
     private double dT;
 
     private double prevX;
@@ -13,7 +18,7 @@ public class Verlet {
 
     private Particle particle;
 
-    public Verlet(OscillatorForce f, double dT) {
+    public Verlet(Force f, double dT) {
         this.f = f;
         this.dT = dT;
         this.particle = f.getParticle();
@@ -38,7 +43,7 @@ public class Verlet {
         particle.velX = newVelX;
         particle.velY = newVelY;
 
-        return new ParticleState(newX, newY, newVelX, newVelY);
+        return new ParticleState(new Particle(newX, newY, newVelX, newVelY, particle.radius, particle.mass));
     }
 
     private void runFirstIteration() {
@@ -49,12 +54,14 @@ public class Verlet {
         prevVelY = particle.velY;
 
         double newX = particle.x + (dT * particle.velX) + (((dT * dT) * f.getXForce()) / (2 * particle.mass));
-
         double newVelX = particle.velX - ((dT * f.getXForce()) / particle.mass);
 
+        double newY = particle.y + (dT * particle.velY) + (((dT * dT) * f.getYForce()) / (2 * particle.mass));
+        double newVelY = particle.velY - ((dT * f.getYForce()) / particle.mass);
+
         particle.x = newX;
-        particle.y = 0;
+        particle.y = newY;
         particle.velX = newVelX;
-        particle.velY = 0;
+        particle.velY = newVelY;
     }
 }

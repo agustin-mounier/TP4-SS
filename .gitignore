@@ -1,2 +1,6 @@
-/out/*
 .idea/*
+*.iml
+out/*
+.DS_Store
+*.xyz
+*.txt

@@ -1,3 +1,9 @@
+package algorithms;
+
+import forces.OscillatorForce;
+import models.Particle;
+import models.ParticleState;
+
 /**
  * Created by amounier on 4/21/17.
  */

@@ -1,7 +1,11 @@
+package forces;
+
+import models.Particle;
+
 /**
  * Created by amounier on 4/21/17.
  */
-public class OscillatorForce {
+public class OscillatorForce implements Force {
 
     private double K;
     private double G;

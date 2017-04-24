@@ -1,3 +1,12 @@
+package caseStudies;
+
+import algorithms.Beeman;
+import algorithms.Gear5;
+import algorithms.Verlet;
+import models.Analytic;
+import forces.OscillatorForce;
+import models.Particle;
+
 /**
  * Created by amounier on 4/21/17.
  */
@@ -58,10 +67,5 @@ public class Oscillator {
             System.out.println(analytic.moveParticle(t));
             t += dT;
         }
-    }
-
-
-    public static void main(String[] args) {
-        runAnalytic();
     }
 }
