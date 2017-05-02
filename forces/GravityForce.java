@@ -22,39 +22,29 @@ public class GravityForce implements Force {
         }
     }
 
-    public GravityForce(Particle sun) {
-        this.otherParticles = new ArrayList<>();
-        this.particle = sun;
+    double getForce(Particle p, Particle other) {
+        return G * p.mass * other.mass / Math.pow(Particle.getDistance(p, other), 2);
     }
 
-    @Override
     public double getXForce() {
-        double fx = 0;
-        for (Particle p : otherParticles) {
-            double dx = Particle.getDx(this.particle, p);
-            fx += specificForce(dx, this.particle, p);
+
+        double ret = 0;
+        for (Particle particle : otherParticles) {
+            ret -= getForce(this.particle, particle) * (this.particle.x - particle.x) / Particle.getDistance(this.particle, particle);
         }
-        return fx;
+        return ret;
     }
 
-    @Override
     public double getYForce() {
-        double fy = 0;
-        for (Particle p : otherParticles) {
-            double dy = Particle.getDy(this.particle, p);
-            fy += specificForce(dy, this.particle, p);
+        double ret = 0;
+        for (Particle particle : otherParticles) {
+            ret -= getForce(this.particle, particle) * (this.particle.y - particle.y) / Particle.getDistance(this.particle, particle);
         }
-        return fy;
+        return ret;
     }
 
-    @Override
     public Particle getParticle() {
-        return particle;
-    }
-
-    // Private functions
-    private double specificForce(double delta, Particle p1, Particle p2) {
-        return (-Math.signum(delta)) * ((this.G * p1.mass * p2.mass) / Math.pow(delta, 2));
+        return this.particle;
     }
 
 }

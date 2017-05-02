@@ -1,5 +1,6 @@
 package algorithms;
 
+import forces.Force;
 import forces.OscillatorForce;
 import models.Particle;
 import models.ParticleState;
@@ -9,14 +10,14 @@ import models.ParticleState;
  */
 public class Beeman {
 
-    private OscillatorForce f;
+    private Force f;
     private double dT;
     private Particle particle;
 
     private double prevAcelX = 0;
     private double prevAcelY = 0;
 
-    public Beeman(OscillatorForce f, double dT) {
+    public Beeman(Force f, double dT) {
         this.f = f;
         this.dT = dT;
         this.particle = f.getParticle();
@@ -49,6 +50,7 @@ public class Beeman {
         prevAcelX = aX;
         prevAcelY = aY;
 
-        return new ParticleState(newX, newY, correctedVelX, correctedVelY);
+        return new ParticleState(new Particle(newX, newY, correctedVelX, correctedVelY, particle.radius, particle.mass));
+
     }
 }

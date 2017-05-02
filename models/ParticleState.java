@@ -3,11 +3,15 @@ package models;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by amounier on 4/21/17.
  */
 public class ParticleState {
+
+    List<String> aux = new ArrayList<>();
 
     double x;
     double y;
@@ -30,14 +34,15 @@ public class ParticleState {
         this.radius = p.radius;
         this.velX = p.velX;
         this.velY = p.velY;
+        aux.add("sun");
+        aux.add("earth");
+        aux.add("mars");
+        aux.add("ship");
     }
 
-    public String toString(boolean radius) {
-        NumberFormat formatter = new DecimalFormat("#0.00");
-
-        if (radius)
-            return (new BigDecimal(x)).toPlainString() + "\t" + (new BigDecimal(y)).toPlainString() + "\t" + (new BigDecimal(this.radius)).toPlainString();
-        else return toString();
+    public String toString(String name) {
+        int mult = name.equals("sun") ? 10 : (name.equals("ship") ? 10000000 : 1000);
+        return aux.indexOf(name) + "\t" + x + "\t" + y + "\t" + this.radius * mult;
     }
 
     @Override
