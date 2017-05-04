@@ -4,6 +4,7 @@ import algorithms.Beeman;
 import algorithms.Verlet;
 import forces.GravityForce;
 import models.Particle;
+import org.omg.CORBA.DoubleHolder;
 import org.omg.CORBA.MARSHAL;
 import utils.StartingPoint;
 
@@ -73,8 +74,8 @@ public class GravitySystem {
     public static final double MONTH = DAY * 31;
     public static final double YEAR = DAY * 365;
 
-    public static final double dt = 200;
-    public static final double t = 3 * YEAR;
+    public static final double dt = 10;
+    public static final double t = 7 * YEAR;
     private boolean hasCrashed = false;
 
     public GravitySystem(double angle, int day, double vel) {
@@ -165,7 +166,9 @@ public class GravitySystem {
         } catch (IOException e) {
 
         }
-        System.out.println(counter);
+        System.out.println("Velocidad Final: " + String.format(Locale.FRENCH, "%.3E", Math.sqrt(Math.pow((ship.velX - mars.velX),2) + Math.pow((ship.velY - mars.velY), 2))));
+        System.out.println("Distancia de Marte: " + String.format(Locale.FRENCH, "%.3E", Particle.getDistance(ship, mars) - mars.radius - ship.radius) );
+        System.out.println("Tiempo de Viaje: " + String.format(Locale.FRENCH, "%.3f", auxT/DAY) + " dias");
     }
 
     public Map<Double, List<String>> start() {
@@ -257,7 +260,7 @@ public class GravitySystem {
         try {
             PrintWriter writer = new PrintWriter("System-short-distance.xyz", "UTF-8");
             Map<Double, List<String>> snapsByDt = new LinkedHashMap<>();
-            while (auxT < t && !hasCrashed(auxT)) {
+            while (auxT < t) {
 
                 if ((int)(counter % dt) == 0) {
                     //printPositions(auxT);
@@ -305,7 +308,10 @@ public class GravitySystem {
         }
     }
 
-    public Double findDistances() {
+    public List<Double> findDistances(double finalDay) {
+        if (finalDay == 0) {
+            finalDay = t;
+        }
         GravityForce sunForce = new GravityForce(sun, earth, mars, ship);
         GravityForce earthForce = new GravityForce(earth, sun, mars, ship);
         GravityForce marsForce = new GravityForce(mars, earth, sun, ship);
@@ -321,18 +327,39 @@ public class GravitySystem {
         double auxT = 0;
         double counter = 0;
 
-        while (auxT < t && !hasCrashed(auxT)) {
+        double minDistance = 1e11;
+        double dtOfMin = 0;
+
+        while (auxT < t && !hasCrashed(auxT) && auxT < DAY*finalDay) {
 
             sunVerlet.moveParticle();
             earthVerlet.moveParticle();
             marsVerlet.moveParticle();
             shipVerlet.moveParticle();
 
+            double newDistance = distanceToMars();
+            if (newDistance < minDistance) {
+                minDistance = newDistance;
+                dtOfMin = auxT;
+            }
+
             counter ++;
             auxT += dt;
         }
-        System.out.println(counter);
-        return counter;
+        //System.out.println(counter);
+
+        double velF = Math.sqrt(Math.pow((ship.velX - mars.velX),2) + Math.pow((ship.velY - mars.velY), 2));
+
+        List <Double> answer = new ArrayList<>();
+
+        answer.add(minDistance);
+        answer.add(ship_launchAngle);
+        answer.add(velF);
+        answer.add(dtOfMin/DAY);
+
+        if(hasCrashed && minDistance >= 1e11) return null;
+
+        return answer;
     }
 
     // Private functions
