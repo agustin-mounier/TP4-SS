@@ -15,7 +15,6 @@ import java.util.*;
 public class StartingPoint {
 
     public static Map<String, List<String>> getStartingPoints(int day) {
-        if (day%5 != 0) return null;
         Map<String, List<String>> rta = new HashMap<>();
         int counter = 0;
         int flag = 0;
@@ -24,7 +23,7 @@ public class StartingPoint {
             FileReader f = new FileReader("positions.txt");
             BufferedReader b = new BufferedReader(f);
             while((cadena = b.readLine())!=null && flag < 4) {
-                if (counter == (4*day)/5 ) {
+                if (counter == (4*day) ) {
                     if (flag > 0) {
                         List<String> line = new ArrayList<String>(Arrays.asList(cadena.split("\t")));
                         rta.put(line.remove(0), line);

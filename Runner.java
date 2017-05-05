@@ -13,14 +13,14 @@ import java.util.*;
 public class Runner {
 
     private final static double LAUNCH_ANGLE = 90; // 90 -- tangencial
-    private final static int LAUNCH_DAY = 660;
-    private final static double LAUNCH_VEL = 8E3;
+    private final static int LAUNCH_DAY = 0;
+    private final static double LAUNCH_VEL = 3E3;
     private final static int LAST_DAY = 90;
 
 
     public static void main(String[] args) {
-        runAll(0, 1000, 10, -90, 90, 2*365, 10E3);
-        //calculateSpecific(LAUNCH_ANGLE, LAUNCH_DAY, LAUNCH_VEL, LAST_DAY, true);
+        //runAll(0, 1000, 1, 90, 90, 365, 10E3);
+        calculateSpecific(LAUNCH_ANGLE, LAUNCH_DAY, LAUNCH_VEL, LAST_DAY, true);
     }
 
     /**
@@ -36,7 +36,7 @@ public class Runner {
 
             Map<Double, List<Double>> answers = new HashMap<>();
 
-            for (double i = startingAngle; i <= endingAngle; i++) {
+            for (double i = startingAngle; i <= endingAngle; i+=20) {
                 List<Double> rta = calculateSpecific(i, day, shipVel, wholePeriod, false);
                 if (rta != null) answers.put(i, rta);
             }
@@ -59,6 +59,7 @@ public class Runner {
     private static void printMin(int day, Map<Double, List<Double>> answers) {
         double minAngle = -1;
         for (Double angle : answers.keySet() ) {
+            if(answers.get(angle) == null) continue;
             double minDistance = -1;
 
             if (minDistance == -1) {

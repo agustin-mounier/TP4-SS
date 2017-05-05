@@ -283,7 +283,7 @@ public class GravitySystem {
                     tOfLessDistance = auxT;
                 }
 
-                if ((int)(auxT % (5*DAY)) == 0) {
+                if ((int)(auxT % (DAY)) == 0) {
                     printPositions(auxT);
                 }
 
@@ -366,8 +366,6 @@ public class GravitySystem {
 
         }
 
-        //System.out.println(counter);
-
         double velF = Math.sqrt(Math.pow((ship.velX - mars.velX),2) + Math.pow((ship.velY - mars.velY), 2));
 
         List <Double> answer = new ArrayList<>();
@@ -378,7 +376,9 @@ public class GravitySystem {
         answer.add(velF);
         answer.add(dtOfMin/DAY);
 
-        if(minDistance == originalDistance) return null;
+        if(minDistance == originalDistance || (dtOfMin/DAY) <= 0.9) {
+            return null;
+        }
         if(hasCrashed) answer.add((double)crashWith);
 
         return answer;
