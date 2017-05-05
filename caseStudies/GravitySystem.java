@@ -1,11 +1,9 @@
 package caseStudies;
 
-import algorithms.Beeman;
 import algorithms.Verlet;
 import forces.GravityForce;
 import models.Particle;
-import org.omg.CORBA.DoubleHolder;
-import org.omg.CORBA.MARSHAL;
+import models.ParticleState;
 import utils.StartingPoint;
 
 import java.io.IOException;
@@ -29,6 +27,7 @@ public class GravitySystem {
 
     private final double E_mass = 5.972E24;
     private final double E_radius = 6371000.0;
+    private boolean shouldGenerateFile;
 
     private double E_Xo = 1.391734353396533E11;
     private double E_Yo = -0.571059040560652E11;
@@ -65,6 +64,7 @@ public class GravitySystem {
     private double ship_vo = 0.0; // m/s
     private final double ship_height = 1500E3; // m
     private double ship_launchAngle = 0; // degrees
+    private static double groundSpeed = 7120;
 
     private Particle ship;
 
@@ -74,12 +74,14 @@ public class GravitySystem {
     public static final double MONTH = DAY * 31;
     public static final double YEAR = DAY * 365;
 
-    public static final double dt = 10;
-    public static final double t = 7 * YEAR;
+    public static final double dt = 100;
+    public static final double t = 1 * YEAR;
     private boolean hasCrashed = false;
+    private int crashWith = -1; // 0 -> sun, 1 -> earth
 
-    public GravitySystem(double angle, int day, double vel) {
+    public GravitySystem(double angle, int day, double vel, boolean generateFile) {
         this.ship_vo = vel;
+        this.shouldGenerateFile = generateFile;
         if(day != 0) {
             Map<String, List<String>> startingPoints = StartingPoint.getStartingPoints(day);
             for (String s : startingPoints.keySet()) {
@@ -260,7 +262,7 @@ public class GravitySystem {
         try {
             PrintWriter writer = new PrintWriter("System-short-distance.xyz", "UTF-8");
             Map<Double, List<String>> snapsByDt = new LinkedHashMap<>();
-            while (auxT < t) {
+            while (auxT < 3*t) {
 
                 if ((int)(counter % dt) == 0) {
                     //printPositions(auxT);
@@ -326,26 +328,44 @@ public class GravitySystem {
 
         double auxT = 0;
         double counter = 0;
+        double originalDistance = distanceToMars();
 
-        double minDistance = 1e11;
+        double minDistance = Particle.getDistance(earth, mars);
         double dtOfMin = 0;
 
-        while (auxT < t && !hasCrashed(auxT) && auxT < DAY*finalDay) {
+        try {
+            PrintWriter writer = new PrintWriter("System-withShip.xyz", "UTF-8");
 
-            sunVerlet.moveParticle();
-            earthVerlet.moveParticle();
-            marsVerlet.moveParticle();
-            shipVerlet.moveParticle();
+            while (auxT < t && !hasCrashed(auxT) && auxT < DAY*finalDay) {
 
-            double newDistance = distanceToMars();
-            if (newDistance < minDistance) {
-                minDistance = newDistance;
-                dtOfMin = auxT;
+                ParticleState sunState = sunVerlet.moveParticle();
+                ParticleState earthState = earthVerlet.moveParticle();
+                ParticleState marsState = marsVerlet.moveParticle();
+                ParticleState shipState = shipVerlet.moveParticle();
+
+                double newDistance = distanceToMars();
+                if (newDistance < minDistance) {
+                    minDistance = newDistance;
+                    dtOfMin = auxT;
+                }
+
+                if (shouldGenerateFile && counter % 100 == 0) {
+                    writer.println(4);
+                    writer.println(auxT);
+                    writer.println(sunState.toString("sun"));
+                    writer.println(earthState.toString("earth"));
+                    writer.println(marsState.toString("mars"));
+                    writer.println(shipState.toString("ship"));
+                }
+
+                counter ++;
+                auxT += dt;
             }
+            writer.close();
+        } catch (IOException e){
 
-            counter ++;
-            auxT += dt;
         }
+
         //System.out.println(counter);
 
         double velF = Math.sqrt(Math.pow((ship.velX - mars.velX),2) + Math.pow((ship.velY - mars.velY), 2));
@@ -353,11 +373,13 @@ public class GravitySystem {
         List <Double> answer = new ArrayList<>();
 
         answer.add(minDistance);
+        answer.add(originalDistance);
         answer.add(ship_launchAngle);
         answer.add(velF);
         answer.add(dtOfMin/DAY);
 
-        if(hasCrashed && minDistance >= 1e11) return null;
+        if(minDistance == originalDistance) return null;
+        if(hasCrashed) answer.add((double)crashWith);
 
         return answer;
     }
@@ -369,15 +391,16 @@ public class GravitySystem {
         double dx = earth.x - sun.x;
         double dy = earth.y - sun.y;
 
-        double angle = Math.atan2(dy, dx) + Math.toRadians(ship_launchAngle);
+        double angle = Math.atan2(dy, dx);
+        double variation = Math.toRadians(ship_launchAngle);
 
         double shipRad = 50;
 
         double x = earth.x + ((earth.radius + shipRad + ship_height) * Math.cos(angle));
         double y = earth.y + ((earth.radius + shipRad + ship_height) * Math.sin(angle));
 
-        double Vx = earth.velX + ship_vo * Math.cos((Math.PI / 2) + angle);
-        double Vy = earth.velY + ship_vo * Math.sin((Math.PI / 2) + angle);
+        double Vx = earth.velX + (ship_vo + groundSpeed) * Math.cos(variation + angle);
+        double Vy = earth.velY + (ship_vo + groundSpeed) * Math.sin(variation + angle);
 
         return new Particle(x, y, Vx, Vy, ship_radius, ship_mass);
     }
@@ -394,10 +417,12 @@ public class GravitySystem {
         if (time > 3*dt && Particle.getDistance(ship, sun) < (ship.radius + sun.radius + ship_height) ) {
             //System.out.println("sun\t-");
             hasCrashed = true;
+            crashWith = 0; // sun
             return true;
         } else if (time > 3*dt && Particle.getDistance(ship, earth) < (ship.radius + earth.radius)) {
             //System.out.println("earth\t-");
             hasCrashed = true;
+            crashWith = 1; // earth
             return true;
         }
         return false;
