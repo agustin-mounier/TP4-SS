@@ -24,7 +24,7 @@ public class GravitySystem {
      * vel          m/s
      */
 
-
+    public static final double dt = 100;
     private final double E_mass = 5.972E24;
     private final double E_radius = 6371000.0;
     private boolean shouldGenerateFile;
@@ -74,7 +74,7 @@ public class GravitySystem {
     public static final double MONTH = DAY * 31;
     public static final double YEAR = DAY * 365;
 
-    public static final double dt = 100;
+    private static final double Dt = 100;
     public static final double t = 1 * YEAR;
     private boolean hasCrashed = false;
     private int crashWith = -1; // 0 -> sun, 1 -> earth
@@ -83,7 +83,7 @@ public class GravitySystem {
         this.ship_vo = vel;
         this.shouldGenerateFile = generateFile;
         if(day != 0) {
-            Map<String, List<String>> startingPoints = StartingPoint.getStartingPoints(day);
+            Map<String, List<String>> startingPoints = StartingPoint.getStartingPoints(day, dt);
             for (String s : startingPoints.keySet()) {
                 List<String> values = startingPoints.get(s);
                 double x = Double.parseDouble(values.get(0));
@@ -332,6 +332,7 @@ public class GravitySystem {
 
         double minDistance = Particle.getDistance(earth, mars);
         double dtOfMin = 0;
+        double earthMars = Particle.getDistance(earth, mars) - mars.radius - earth.radius;
 
         try {
             PrintWriter writer = new PrintWriter("System-withShip.xyz", "UTF-8");
@@ -347,6 +348,11 @@ public class GravitySystem {
                 if (newDistance < minDistance) {
                     minDistance = newDistance;
                     dtOfMin = auxT;
+                }
+
+                double newDistanceEarthMars = Particle.getDistance(earth, mars) - mars.radius - earth.radius;
+                if (newDistanceEarthMars < earthMars) {
+                    earthMars = newDistanceEarthMars;
                 }
 
                 if (shouldGenerateFile && counter % 100 == 0) {
@@ -376,9 +382,14 @@ public class GravitySystem {
         answer.add(velF);
         answer.add(dtOfMin/DAY);
 
+        System.out.println("**"+earthMars);
+
         if(minDistance == originalDistance || (dtOfMin/DAY) <= 0.9) {
             return null;
         }
+
+
+
         if(hasCrashed) answer.add((double)crashWith);
 
         return answer;
