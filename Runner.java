@@ -12,14 +12,14 @@ import java.util.*;
  */
 public class Runner {
 
-    private final static double LAUNCH_ANGLE = 1; // 90 -- tangencial
-    private final static int LAUNCH_DAY = 659;
-    private final static double LAUNCH_VEL = 8E3;
-    private final static int LAST_DAY = 80;
+    private final static double LAUNCH_ANGLE = 50; // 90 -- tangencial
+    private final static int LAUNCH_DAY = 622;
+    private final static double LAUNCH_VEL = 10E3;
+    private final static int LAST_DAY = 365;
 
     public static void main(String[] args) {
-        //runAll(0, 700, 5, 90, 90, 365, 8E3);
-        calculateSpecific(LAUNCH_ANGLE, LAUNCH_DAY, LAUNCH_VEL, LAST_DAY, true);
+        runAll(0, 690, 1, -90, 90, 365, 10E3);
+        //calculateSpecific(LAUNCH_ANGLE, LAUNCH_DAY, LAUNCH_VEL, LAST_DAY, true);
     }
 
     /**
@@ -58,9 +58,9 @@ public class Runner {
 
     private static void printMin(int day, Map<Double, List<Double>> answers) {
         double minAngle = -1;
+        double minDistance = -1;
         for (Double angle : answers.keySet() ) {
             if(answers.get(angle) == null) continue;
-            double minDistance = -1;
 
             if (minDistance == -1) {
                 minAngle = angle;
@@ -90,56 +90,6 @@ public class Runner {
         }
         System.out.println();
         System.out.println("Tiempo de Viaje: " + String.format(Locale.FRENCH, "%.3f", answers.get(4)) + " dias");
-    }
-
-    private static void printToFile(Double angle, Map<Double, List<String>> snapsByDt, int day, double vel) {
-        try {
-            PrintWriter writer = new PrintWriter("System-withShip-"+vel+"-"+day+"-"+angle+".xyz", "UTF-8");
-            for (Double dt : snapsByDt.keySet()) {
-                writer.println(snapsByDt.get(dt).size());
-                writer.println(dt);
-                for (String s : snapsByDt.get(dt)) {
-                    writer.println(s);
-                }
-            }
-            writer.close();
-        } catch (IOException e){
-
-        }
-
-    }
-
-    private static void startWithSpecifConditions() {
-        try {
-            String cadena;
-            FileReader f = new FileReader("utils/finalVelocityCalculator.txt");
-            BufferedReader b = new BufferedReader(f);
-            while((cadena = b.readLine())!=null) {
-                double vel = 0.0, angle = 0.0, distance = 0.0;
-                int day = 0;
-                List<String> line = new ArrayList<>(Arrays.asList(cadena.split(" ")));
-                for (String v : line) {
-                    switch (line.indexOf(v)) {
-                        case 0: // vel
-                            vel = Double.parseDouble(v);
-                            break;
-                        case 1: // day
-                            day = Integer.parseInt(v);
-                            break;
-                        case 2: // angle
-                            distance = Double.parseDouble(v);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                GravitySystem gs = new GravitySystem(angle, day, vel, false);
-                gs.runUntil(distance);
-            }
-            b.close();
-        } catch (IOException e) {
-
-        }
     }
 
 }

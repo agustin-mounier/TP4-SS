@@ -74,7 +74,6 @@ public class GravitySystem {
     public static final double MONTH = DAY * 31;
     public static final double YEAR = DAY * 365;
 
-    private static final double Dt = 100;
     public static final double t = 1 * YEAR;
     private boolean hasCrashed = false;
     private int crashWith = -1; // 0 -> sun, 1 -> earth
@@ -123,126 +122,6 @@ public class GravitySystem {
         this.ship = setShip();
     }
 
-    public void runUntil(double day) {
-        GravityForce sunForce = new GravityForce(sun, earth, mars, ship);
-        GravityForce earthForce = new GravityForce(earth, sun, mars, ship);
-        GravityForce marsForce = new GravityForce(mars, earth, sun, ship);
-
-        GravityForce shipForce = new GravityForce(ship, earth, sun, mars);
-
-        // Verlet
-        Verlet sunVerlet = new Verlet(sunForce, dt);
-        Verlet earthVerlet = new Verlet(earthForce, dt);
-        Verlet marsVerlet = new Verlet(marsForce, dt);
-
-        Verlet shipVerlet = new Verlet(shipForce, dt);
-
-        double auxT = 0;
-        int counter = 0;
-
-        try {
-            PrintWriter writer = new PrintWriter("System-withShip4.xyz", "UTF-8");
-            while (auxT < t && !hasCrashed(auxT) && auxT < day*DAY) {
-
-                if ((int)(counter % 100) == 0) {
-                    //printPositions(auxT);
-
-                    writer.println(4);
-                    writer.println(auxT);
-                    writer.println(sunVerlet.moveParticle().toString("sun"));
-                    writer.println(earthVerlet.moveParticle().toString("earth"));
-                    writer.println(marsVerlet.moveParticle().toString("mars"));
-
-                    writer.println(shipVerlet.moveParticle().toString("ship"));
-
-                } else {
-                    sunVerlet.moveParticle();
-                    earthVerlet.moveParticle();
-                    marsVerlet.moveParticle();
-                    shipVerlet.moveParticle();
-                }
-                auxT += dt;
-                counter ++;
-            }
-            writer.close();
-        } catch (IOException e) {
-
-        }
-        System.out.println("Velocidad Final: " + String.format(Locale.FRENCH, "%.3E", Math.sqrt(Math.pow((ship.velX - mars.velX),2) + Math.pow((ship.velY - mars.velY), 2))));
-        System.out.println("Distancia de Marte: " + String.format(Locale.FRENCH, "%.3E", Particle.getDistance(ship, mars) - mars.radius - ship.radius) );
-        System.out.println("Tiempo de Viaje: " + String.format(Locale.FRENCH, "%.3f", auxT/DAY) + " dias");
-    }
-
-    public Map<Double, List<String>> start() {
-        boolean arrived = false;
-        Double nearestToMars = null;
-        Double arrivalTime = null;
-        double finalVel = 0;
-
-        GravityForce sunForce = new GravityForce(sun, earth, mars, ship);
-        GravityForce earthForce = new GravityForce(earth, sun, mars, ship);
-        GravityForce marsForce = new GravityForce(mars, earth, sun, ship);
-
-        GravityForce shipForce = new GravityForce(ship, earth, sun, mars);
-
-        // Verlet
-        Verlet sunVerlet = new Verlet(sunForce, dt);
-        Verlet earthVerlet = new Verlet(earthForce, dt);
-        Verlet marsVerlet = new Verlet(marsForce, dt);
-
-        Verlet shipVerlet = new Verlet(shipForce, dt);
-
-        double auxT = 0;
-        int counter = 0;
-
-        System.out.print(String.format(Locale.FRENCH, "%.1f", ship_launchAngle) + "\t");
-
-        Map<Double, List<String>> snapsByDt = new HashMap<>();
-        while (auxT < t && !hasCrashed(auxT)) {
-
-
-            if((int)(counter%5) == 0) {
-                List<String> snaps = new ArrayList<>();
-                snaps.add(sunVerlet.moveParticle().toString("sun"));
-                snaps.add(earthVerlet.moveParticle().toString("earth"));
-                snaps.add(marsVerlet.moveParticle().toString("mars"));
-
-                snaps.add(shipVerlet.moveParticle().toString("ship"));
-                snapsByDt.put(auxT, snaps);
-            } else {
-                sunVerlet.moveParticle();
-                earthVerlet.moveParticle();
-                marsVerlet.moveParticle();
-
-                shipVerlet.moveParticle();
-            }
-
-            if (inMars()) {
-                arrived = true;
-                double distance = Particle.getDistance(ship, mars);
-                if (nearestToMars == null ) {
-                    arrivalTime = auxT;
-                    nearestToMars = distance;
-                    finalVel = getShipVel();
-                } else {
-                    nearestToMars = distance < nearestToMars ? distance : nearestToMars;
-                    arrivalTime = auxT;
-                    finalVel = getShipVel();
-                }
-            }
-            counter++;
-            auxT += dt;
-        }
-        if (arrived) {
-            System.out.println(String.format(Locale.FRENCH, "%.3E", arrivalTime/DAY)
-                    + "\t" + String.format(Locale.FRENCH, "%.3E",nearestToMars)
-                    + "\t" + String.format(Locale.FRENCH, "%.3E",finalVel));
-            return snapsByDt;
-        }
-        if (!hasCrashed) System.out.println("-\t-");
-        return null;
-    }
-
     public void findShortestDistance() {
         GravityForce sunForce = new GravityForce(sun, earth, mars);
         GravityForce earthForce = new GravityForce(earth, sun, mars);
@@ -283,10 +162,11 @@ public class GravitySystem {
                     tOfLessDistance = auxT;
                 }
 
+                /*
                 if ((int)(auxT % (DAY)) == 0) {
                     printPositions(auxT);
                 }
-
+                */
                 auxT += dt;
                 counter ++;
             }
@@ -382,13 +262,11 @@ public class GravitySystem {
         answer.add(velF);
         answer.add(dtOfMin/DAY);
 
-        System.out.println("**"+earthMars);
+        //System.out.println("Distancia minima entre Marte y Tierra: " + String.format(Locale.FRENCH, "%.3E", earthMars));
 
         if(minDistance == originalDistance || (dtOfMin/DAY) <= 0.9) {
             return null;
         }
-
-
 
         if(hasCrashed) answer.add((double)crashWith);
 
